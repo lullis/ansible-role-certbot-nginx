@@ -1,0 +1,30 @@
+upstream {{ upstream_name }} {
+    server {{ upstream_host }}:{{ upstream_port }};
+}
+
+server {
+    listen 443 ssl http2;
+    server_name {{ public_domain }};
+
+    include {{ nginx_snippet_ssl_certificates_path }};
+    include {{ nginx_snippet_ssl_params_path }};
+
+{% for directive in extra_configs.server_directives|default([]) %}
+    {{ directive }}
+{% endfor %}
+
+    location {{ public_mount_point }} {
+
+{% for directive in extra_configs.location_directives|default([]) %}
+        {{ directive }}
+{% endfor %}
+        
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        proxy_pass http://{{ upstream_name }}{{ upstream_path }};
+        proxy_http_version 1.1;
+    }
+}

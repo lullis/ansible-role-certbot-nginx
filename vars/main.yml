@@ -1,0 +1,4 @@
+---
+certbot_certificate_chain_file_path: "/etc/letsencrypt/live/{{ certbot_certificate_name }}/fullchain.pem"
+certbot_certificate_file_path: "/etc/letsencrypt/live/{{ certbot_certificate_name }}/cert.pem"
+certbot_certificate_key_path: "/etc/letsencrypt/live/{{ certbot_certificate_name }}/privkey.pem"

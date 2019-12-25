@@ -1,0 +1,29 @@
+---
+galaxy_info:
+  role_name: certbot-nginx
+  description: installs nginx and certbot (along with the nginx plugin) to setup nginx as a SSL proxy
+  
+  author: Raphael Lullis
+  company: MushroomLabs
+  license: license (GPL-2.0-or-later, MIT, etc)
+
+  min_ansible_version: 2.4
+  platforms:
+  - name: Ubuntu
+    versions:
+    - xenial
+    - yakkety
+    - zesty
+    - artful
+    - bionic
+    - cosmic
+    - disco
+    - eoan
+
+  galaxy_tags:
+    - nginx
+    - certbot
+
+
+dependencies:
+  - geerlingguy.nginx

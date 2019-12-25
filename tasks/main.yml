@@ -1,0 +1,134 @@
+---
+- name: create DH Parameter file
+  tags: openssl, security, keygen
+  become: true
+  command: "openssl dhparam -out {{ ssl_dhparam_file_location }} {{ ssl_dhparam_key_size }}"
+  args:
+    creates: "{{ ssl_dhparam_file_location }}"
+
+- name: install ca-certificates
+  tags: ca
+  become: true
+  apt:
+    name: ca-certificates
+    state: present
+
+- name: install certbot ppa
+  tags: certbot, setup
+  become: true
+  apt_repository:
+    repo: ppa:certbot/certbot
+    state: present
+
+- name: install certbot packages
+  tags: certbot, package, installation
+  become: true
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - certbot
+    - python-certbot-nginx    
+
+- name: install ssl parameters snippet file
+  tags: certbot, nginx
+  become: true
+  template:
+    src: etc/nginx/snippets/ssl_params.conf.j2
+    dest: "{{ nginx_snippet_ssl_params_path }}"
+
+- name: install certbot ssl certificates snippet file
+  tags: certbot, nginx
+  become: true
+  template:
+    src: etc/nginx/snippets/ssl_certificate_files.conf.j2
+    dest: "{{ nginx_snippet_ssl_certificates_path }}"
+
+- name: install CA certificate file
+  tags: certbot, ca
+  become: true
+  copy:
+    src: files/letsencrypt_ca.pem
+    dest: "{{ ca_certificate_path }}"
+    mode: 0644
+
+- name: register certbot account
+  tags: certbot, account, registration
+  become: true
+  command: "certbot register --agree-tos -m {{ certbot_email }}"
+  run_once: true
+  ignore_errors: true
+
+- name: install certificate
+  tags: certbot, certificate, install
+  become: true
+  command: "certbot certonly --nginx -n --expand -w {{ nginx_webroot_path }} --cert-name {{ certbot_certificate_name }} -d {{ hostvars[inventory_hostname]['certbot_domain_list']| join(' -d ') }}"
+  
+- name: create group for access of certificates
+  tags: certbot, unix, access
+  become: true
+  group:
+    name: "{{ certificate_store_access_group_name }}"
+    state: present    
+
+- name: give access for services to certificate store
+  tags: certbot, unix, access
+  become: true
+  file:
+    path: "{{ item }}"
+    group: "{{ certificate_store_access_group_name }}"
+    mode: u=rwX,g=rX,o=
+    recurse: true
+  with_items:
+    - "{{ certificate_store_dir }}"
+    - "{{ certificate_store_live_dir }}"
+
+- name: install site configuration file
+  tags: nginx, web, site
+  become: true
+  template:
+    src: etc/nginx/sites-available/redirect_ssl.j2
+    dest: "/etc/nginx/sites-available/{{ nginx_ssl_site_name }}"
+
+- name: enable nginx site
+  tags: nginx, web, systemd
+  become: true
+  file:
+    src: "/etc/nginx/sites-available/{{ nginx_ssl_site_name }}"
+    dest: "/etc/nginx/sites-enabled/{{ nginx_ssl_site_name }}"
+    state: link
+  notify:
+    - reload nginx
+
+- name: install vhosts
+  become: true
+  tags: nginx, web, hosts
+  template:
+    src: etc/nginx/sites-available/proxy_site.j2
+    dest: "/etc/nginx/sites-available/{{ item.0 }}"
+  vars:
+    - upstream_name: "{{ item.1.upstream_name }}"
+    - upstream_host: "{{ item.1.upstream_host }}"
+    - upstream_port: "{{ item.1.upstream_port|default(80) }}"
+    - upstream_path: "{{ item.1.upstream_path|default('') }}"
+    - public_domain: "{{ item.0 }}"
+    - public_mount_point: "{{ item.1.public_mount_point|default('/') }}"
+    - extra_configs: "{{ item.1.extra_configs|default({}) }}"
+  loop: "{{ sites|dictsort }}"
+  loop_control:
+    label: "{{ item.0 }}"
+    
+- name: enable nginx site
+  tags: nginx, web, systemd, hosts
+  become: true
+  file:
+    src: "/etc/nginx/sites-available/{{ item.0 }}"
+    dest: "/etc/nginx/sites-enabled/{{ item.0 }}"
+    state: link
+  loop: "{{ sites|dictsort }}"
+  loop_control:
+    label: "{{ item.0 }}"
+  
+  notify:
+    - reload nginx
+    
