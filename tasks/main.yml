@@ -28,7 +28,7 @@
     state: present
   with_items:
     - certbot
-    - python-certbot-nginx    
+    - python-certbot-nginx
 
 - name: install ssl parameters snippet file
   tags: certbot, nginx
@@ -63,13 +63,13 @@
   tags: certbot, certificate, install
   become: true
   command: "certbot certonly --nginx -n --expand -w {{ nginx_webroot_path }} --cert-name {{ certbot_certificate_name }} -d {{ hostvars[inventory_hostname]['certbot_domain_list']| join(' -d ') }}"
-  
+
 - name: create group for access of certificates
   tags: certbot, unix, access
   become: true
   group:
     name: "{{ certificate_store_access_group_name }}"
-    state: present    
+    state: present
 
 - name: give access for services to certificate store
   tags: certbot, unix, access
@@ -117,7 +117,7 @@
   loop: "{{ sites|dictsort }}"
   loop_control:
     label: "{{ item.0 }}"
-    
+
 - name: enable nginx site
   tags: nginx, web, systemd, hosts
   become: true
@@ -128,7 +128,6 @@
   loop: "{{ sites|dictsort }}"
   loop_control:
     label: "{{ item.0 }}"
-  
+
   notify:
     - reload nginx
-    
