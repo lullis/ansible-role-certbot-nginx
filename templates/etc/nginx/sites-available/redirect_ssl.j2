@@ -1,14 +1,15 @@
 server {
     listen 80 default_server;
     server_name _;
+    {% if certbot_nginx_http_challenge_enabled %}
     location ~ /.well-known/acme-challenge {
-	root {{ nginx_webroot_path }};
+	root {{ certbot_nginx_webroot_path }};
 	default_type "text/plain";
     	allow all;
 	break;
     }
-
+    {% endif %}
     location / {
-	return 303 https://$host$request_uri;
-    }    
+	return 301 https://$host$request_uri;
+    }
 }

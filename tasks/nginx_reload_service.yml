@@ -1,0 +1,9 @@
+--- 
+- name: reload nginx configuration
+  tags: nginx, web, systemd
+  become: true
+  systemd:
+    name: nginx
+    state: reloaded
+    enabled: true
+  

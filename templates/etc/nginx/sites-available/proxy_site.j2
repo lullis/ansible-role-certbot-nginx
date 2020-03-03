@@ -1,30 +1,37 @@
-upstream {{ upstream_name }} {
-    server {{ upstream_host }}:{{ upstream_port }};
+{% for upstream in upstreams %}
+upstream {{ upstream.name }} {
+    {% for server in upstream.servers %}
+    server {{ server.host }}:{{ server.port }};
+    {% endfor %}
 }
+{% endfor %}
 
 server {
     listen 443 ssl http2;
     server_name {{ public_domain }};
 
-    include {{ nginx_snippet_ssl_certificates_path }};
-    include {{ nginx_snippet_ssl_params_path }};
+    include {{ certbot_nginx_snippet_ssl_certificates_path }};
+    include {{ certbot_nginx_snippet_ssl_params_path }};
 
-{% for directive in extra_configs.server_directives|default([]) %}
-    {{ directive }}
-{% endfor %}
+{% if site_directives is defined and site_directives %}
+    {{ site_directives | indent(width=4) }}
+{% endif %}
 
-    location {{ public_mount_point }} {
+{% for location in locations %}
+    location {{ location.path | default("/") }} {
 
-{% for directive in extra_configs.location_directives|default([]) %}
-        {{ directive }}
-{% endfor %}
-        
+{% if location.directives is defined %}
+        {{ location.directives | indent(width=4) }}
+{% endif %}
+{% if location.upstream_name is defined %}
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
 
-        proxy_pass http://{{ upstream_name }}{{ upstream_path }};
+        proxy_pass http://{{ location.upstream_name }};
         proxy_http_version 1.1;
+{% endif %}
     }
+{% endfor %}
 }

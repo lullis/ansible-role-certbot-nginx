@@ -1,0 +1,66 @@
+---
+- name: install certbot ppa
+  tags: certbot, setup
+  become: true
+  apt_repository:
+    repo: ppa:certbot/certbot
+    state: present
+  when: certbot_nginx_http_challenge_enabled | bool
+
+- name: install certbot packages
+  tags: certbot, package, installation
+  become: true
+  apt:
+    state: present
+    name:
+      - certbot
+      - python-certbot-nginx
+
+- name: install CA certificate file
+  tags: certbot, ca
+  become: true
+  copy:
+    src: files/letsencrypt_ca.pem
+    dest: "{{ certbot_nginx_ca_certificate_path }}"
+    mode: 0644
+
+- name: register certbot account
+  tags: certbot, account, registration
+  become: true
+  command: "certbot register --agree-tos -m {{ certbot_nginx_email }}"
+  run_once: true
+  ignore_errors: true
+
+- name: create group for access of certificates
+  tags: certbot, unix, access
+  become: true
+  group:
+    name: "{{ certbot_nginx_certificate_store_access_group_name }}"
+    state: present
+
+- name: give access for services to certificate store
+  tags: certbot, unix, access
+  become: true
+  file:
+    path: "{{ item }}"
+    group: "{{ certbot_nginx_certificate_store_access_group_name }}"
+    mode: u=rwX,g=rX,o=
+    recurse: true
+  with_items:
+    - "{{ certbot_nginx_certificate_store_dir }}"
+    - "{{ certbot_nginx_certificate_store_live_dir }}"
+
+- name: Add cron job for certbot renewal
+  tags: certbot, cron
+  become: true
+  cron:
+    name: Certbot automatic renewal.
+    job: "{{ certbot_nginx_executable_path }} renew {{ certbot_nginx_renew_cron_options }}"
+    minute: "{{ certbot_nginx_renew_cron_minute }}"
+    hour: "{{ certbot_nginx_renew_cron_hour }}"
+    weekday: "{{ certbot_nginx_renew_cron_weekday }}"
+
+- name: install certificates
+  tags: certbot, certificate, install
+  become: true
+  command: "{{ certbot_nginx_executable_path }} certonly --nginx -n --expand -w {{ certbot_nginx_webroot_path }} --cert-name {{ certbot_nginx_certificate_name }} -d {{ hostvars[inventory_hostname]['certbot_domain_list']| join(' -d ') }}"

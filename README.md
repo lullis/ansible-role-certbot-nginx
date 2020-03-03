@@ -44,8 +44,8 @@ ssl_dhparam_file_location: /etc/ssl/certs/dhparam.pem
 
 There is only one certificate
 ```
-nginx_snippet_ssl_certificates_path: /etc/nginx/snippets/ssl_certificate_files.conf
-nginx_snippet_ssl_params_path: /etc/nginx/snippets/ssl-params.conf
+certbot_nginx_snippet_ssl_certificates_path: /etc/nginx/snippets/ssl_certificate_files.conf
+certbot_nginx_snippet_ssl_params_path: /etc/nginx/snippets/ssl-params.conf
 ```
 
 Where certbot will place the files with the responses for the challenges from Let's Encrypt

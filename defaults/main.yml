@@ -1,14 +1,24 @@
 ---
-ca_certificate_path: /etc/ssl/certs/letsencrypt_ca.pem
-certificate_store_live_dir: /etc/letsencrypt/live
-certificate_store_dir: /etc/letsencrypt/archive
-certificate_store_access_group_name: ssl-cert
-ssl_dhparam_key_size: 2048
-ssl_dhparam_file_location: /etc/ssl/certs/dhparam.pem
-
-nginx_snippet_ssl_certificates_path: /etc/nginx/snippets/ssl_certificate_files.conf
-nginx_snippet_ssl_params_path: /etc/nginx/snippets/ssl-params.conf
-nginx_webroot_path: /var/www/html
-
-nginx_ssl_site_name: default
-sites: {}
+certbot_nginx_ca_certificate_path: /etc/ssl/certs/letsencrypt_ca.pem
+certbot_nginx_certificate_store_live_dir: /etc/letsencrypt/live
+certbot_nginx_certificate_store_dir: /etc/letsencrypt/archive
+certbot_nginx_certificate_store_access_group_name: ssl-cert
+certbot_nginx_certificate_name: "{{ inventory_hostname }}"
+certbot_nginx_certificate_chain_file_path: "/etc/letsencrypt/live/{{ certbot_nginx_certificate_name }}/fullchain.pem"
+certbot_nginx_certificate_file_path: "/etc/letsencrypt/live/{{ certbot_nginx_certificate_name }}/cert.pem"
+certbot_nginx_certificate_key_path: "/etc/letsencrypt/live/{{ certbot_nginx_certificate_name }}/privkey.pem"
+certbot_nginx_install_ppa: false
+certbot_nginx_executable_path: /usr/bin/certbot
+certbot_nginx_renew_cron_options: "--quiet"
+certbot_nginx_renew_cron_minute: 0
+certbot_nginx_renew_cron_hour: 2
+certbot_nginx_renew_cron_weekday: 1
+certbot_nginx_ssl_dhparam_key_size: 2048
+certbot_nginx_ssl_dhparam_file_location: /etc/ssl/certs/dhparam.pem
+certbot_nginx_snippet_ssl_certificates_path: /etc/nginx/snippets/ssl_certificate_files.conf
+certbot_nginx_snippet_ssl_params_path: /etc/nginx/snippets/ssl-params.conf
+certbot_nginx_webroot_path: /var/www/html
+certbot_nginx_ssl_site_name: default
+certbot_nginx_http_challenge_enabled: false
+certbot_nginx_htpasswd_databases: {}
+certbot_nginx_ssl_sites: {}
