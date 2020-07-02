@@ -1,3 +1,5 @@
+{{ function_definition_directives | default('') }}
+
 {% for upstream in upstreams %}
 upstream {{ upstream.name }} {
     {% for server in upstream.servers %}
@@ -21,7 +23,7 @@ server {
     location {{ location.path | default("/") }} {
 
 {% if location.directives is defined %}
-        {{ location.directives | indent(width=4) }}
+        {{ location.directives | indent(width=8) }}
 {% endif %}
 {% if location.upstream_name is defined %}
         proxy_set_header Host $host;

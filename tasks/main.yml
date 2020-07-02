@@ -45,6 +45,15 @@
   notify:
     - reload nginx
 
+- name: disable existing vhosts entries
+  tags: nginx, web, hosts
+  file:
+    path: "/etc/nginx/sites-enabled/{{ item.key }}"
+    state: absent
+  loop: "{{ certbot_nginx_ssl_sites | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+
 - name: reload nginx service with configuration (if needed)
   meta: flush_handlers
 
@@ -62,6 +71,7 @@
     - upstreams: "{{ item.value.upstreams }}"
     - locations: "{{ item.value.locations }}"
     - site_directives: "{{ item.value.site_directives | default('') }}"
+    - function_definition_directives: "{{ item.value.function_definition_directives | default('') }}"
   loop: "{{ certbot_nginx_ssl_sites|dict2items }}"
   notify:
     - reload nginx

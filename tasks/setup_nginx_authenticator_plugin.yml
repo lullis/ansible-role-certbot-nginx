@@ -1,11 +1,19 @@
 ---
+- name: install apt dependencies
+  tags: certbot, nginx-authenticator, apt
+  become: true
+  apt:
+    name:
+      - software-properties-common
+  when: certbot_nginx_http_challenge_enabled | bool
+
 - name: install certbot ppa
   tags: certbot, setup
   become: true
   apt_repository:
     repo: ppa:certbot/certbot
     state: present
-  when: certbot_nginx_http_challenge_enabled | bool
+  when: certbot_nginx_http_challenge_enabled and ansible_distribution == 'Ubuntu'
 
 - name: install certbot packages
   tags: certbot, package, installation
@@ -15,6 +23,7 @@
     name:
       - certbot
       - python-certbot-nginx
+  when: certbot_nginx_http_challenge_enabled | bool
 
 - name: install CA certificate file
   tags: certbot, ca
@@ -63,4 +72,4 @@
 - name: install certificates
   tags: certbot, certificate, install
   become: true
-  command: "{{ certbot_nginx_executable_path }} certonly --nginx -n --expand -w {{ certbot_nginx_webroot_path }} --cert-name {{ certbot_nginx_certificate_name }} -d {{ hostvars[inventory_hostname]['certbot_domain_list']| join(' -d ') }}"
+  command: "{{ certbot_nginx_executable_path }} certonly --nginx -n --expand -w {{ certbot_nginx_webroot_path }} --cert-name {{ certbot_nginx_certificate_name }} -d {{ hostvars[inventory_hostname]['certbot_nginx_domain_list']| join(' -d ') }}"

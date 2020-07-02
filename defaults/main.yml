@@ -16,7 +16,7 @@ certbot_nginx_renew_cron_weekday: 1
 certbot_nginx_ssl_dhparam_key_size: 2048
 certbot_nginx_ssl_dhparam_file_location: /etc/ssl/certs/dhparam.pem
 certbot_nginx_snippet_ssl_certificates_path: /etc/nginx/snippets/ssl_certificate_files.conf
-certbot_nginx_snippet_ssl_params_path: /etc/nginx/snippets/ssl-params.conf
+certbot_nginx_snippet_ssl_params_path: /etc/nginx/snippets/ssl_params.conf
 certbot_nginx_webroot_path: /var/www/html
 certbot_nginx_ssl_site_name: default
 certbot_nginx_http_challenge_enabled: false
